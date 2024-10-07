@@ -6,16 +6,26 @@
 \usage{
 process_args(
   args,
-  required_args,
-  optional_value_args,
-  optional_flag_args,
+  required_value_args = character(0),
+  required_flag_args = character(0),
+  optional_value_args = character(0),
+  optional_flag_args = character(0),
   ignored_args = c("no-echo", "no-restore", "file", "args"),
   quietly = FALSE
 )
 }
 \arguments{
 \item{args}{Character vector in form of `--<parameter>`  or
-`--<parameter>=<value>`, usually derived by calling commandArgs()}
+`--<parameter>=<value>`, usually derived using `commandArgs()[-1]` (note
+that the first value returned from commandArgs() is the location of the R
+executable, so it is removed from `args` using `[-1]`)}
+
+\item{required_value_args}{A character vector of parameter names that are
+required on the command line and which must be assigned arguments values.}
+
+\item{required_flag_args}{A character vector of parameter names that are
+required on the command line; these parameters may have, but do not require
+argument values.}
 
 \item{optional_value_args}{A character vector of parameter names that are not
 required.  When present, these parameters may have, but do not require,
@@ -26,13 +36,6 @@ removed from the return value.}
 
 \item{quietly}{Set to TRUE to suppress printing of arguments to console even
 if `args` contains '--verbose'}
-
-\item{required_value_args}{A character vector of parameter names that are
-required on the command line and which must be assigned arguments values.}
-
-\item{required_flag_args}{A character vector of parameter names that are
-required on the command line; these parameters may have, but do not require
-argument values.}
 }
 \value{
 A named character vector where the names are parameters names.  The
@@ -40,8 +43,8 @@ A named character vector where the names are parameters names.  The
   parameter name was absent, or the value after the `=` if assigned a value
   on in `args`.
 
-  If `args` contains a value `--verbose` the return vector is printed
-  to the console unless `quietly` is set to TRUE.
+  If `args` contains a value `--verbose` the return vector is printed to the
+  console unless `quietly` is set to TRUE.
 }
 \description{
 Converts results from commandArgs() into a named character vector where the
