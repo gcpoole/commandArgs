@@ -4,8 +4,7 @@ Title: Simple Processor for Command Line Arguments (Title Case)
 Version: 1.0
 Author: Geoffrey Poole
 Maintainer: Geoffrey Poole <gpoole@eco-metrics.com>
-Description: Takes the results from commandArgs() (or a similar character 
-vector) and converts it to a named character vector of argument values.
+Description: Takes the results from commandArgs() (or a similar character vector) and converts it to a named character vector of argument values.
 License: MIT
 Encoding: UTF-8
 LazyData: true
