@@ -53,21 +53,12 @@ process_args <- function(args, required_value_args = character(0), required_flag
                          quietly = FALSE)
 {
 
+  args <- args_to_named_vector(args)
+
   required_args <- c(required_value_args, required_flag_args)
   optional_args <- c(optional_value_args, optional_flag_args)
   need_value_args <- c(required_value_args, optional_value_args)
   valid_args <- c(required_args, optional_args, ignored_args)
-
-  # check that all args are formatted correctly
-  badArgs = !grepl("(^--[^[:space:]]+=[^[:space:]]+.+$)|(^--[^[:space:]]+$)", args)
-  if(any(badArgs)) stop("Command line arguments must be in the form '--name=value' with no spaces around the '='")
-
-  # split args on '='; get name of arg from before '=' and value from after
-  args <- structure(sapply(strsplit(args, "="), `[`, 2), names = sapply(strsplit(args, "="), `[`, 1))
-  # get rid of '--' from before arg name
-  names(args) <- sub("^-+", "", names(args))
-  # get rid of any args that are to be ignored.
-  # args <- args[!names(args) %in% ignored_args]
 
   # check to be sure the required args are there...
   missing_args <- required_args[!required_args %in% names(args)]
@@ -110,5 +101,19 @@ process_args <- function(args, required_value_args = character(0), required_flag
     }
   }
 
+  args
+}
+
+args_to_named_vector <- function(args) {
+  # check that all args are formatted correctly
+  badArgs = !grepl("(^--[^[:space:]]+=[^[:space:]]+.+$)|(^--[^[:space:]]+$)", args)
+  if(any(badArgs)) stop("Command line arguments must be in the form '--name=value' with no spaces around the '='")
+
+  # split args on '='; get name of arg from before '=' and value from after
+  args <- structure(sapply(strsplit(args, "="), `[`, 2), names = sapply(strsplit(args, "="), `[`, 1))
+  # get rid of '--' from before arg name
+  names(args) <- sub("^-+", "", names(args))
+  # get rid of any args that are to be ignored.
+  # args <- args[!names(args) %in% ignored_args]
   args
 }
