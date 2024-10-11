@@ -54,11 +54,11 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
                   report = FALSE, error_report = list(),
                   webhook_var = "BATCH_WEBHOOK", msg_log_dir = "batch_message_log") {
 
-  if(!is.null(msg_log_dir))
-    if(!dir.exists(msg_log_dir)) stop("Message log directory does not exist.")
-
   fun_name <- as.character(substitute(fun))
   if(fun_name[1] == "::") fun_name <- fun_name[3]
+
+  if(!is.null(msg_log_dir) & !report)
+    if(!dir.exists(msg_log_dir)) stop("Message log directory does not exist.")
 
   # these three variables are globals needed for makeMessage() and
   # reporting
