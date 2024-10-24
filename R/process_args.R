@@ -49,7 +49,7 @@
 #' @export
 process_args <- function(args, required_value_args = character(0), required_flag_args = character(0),
                          optional_value_args = character(0), optional_flag_args = character(0),
-                         ignored_args = c("no-echo", "no-restore", "file", "args"),
+                         ignored_args = c("no-echo", "no-restore", "file", "args", "no-save"),
                          quietly = FALSE)
 {
 
