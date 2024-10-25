@@ -101,6 +101,12 @@ process_args <- function(args, required_value_args = character(0), required_flag
     }
   }
 
+  # strip quotes from any quoted arg
+  quoted <- grepl("(^\".*\"$)|(^'.*'$)", args)
+  args[quoted] <-
+    sub("^.", "", args[quoted]) |>
+    sub(pattern = ".$", replacement = "", x = _)
+
   args
 }
 
