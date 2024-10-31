@@ -54,30 +54,32 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
                   report = FALSE, error_report = list(),
                   webhook_var = "BATCH_WEBHOOK", msg_log_dir = "batch_message_log") {
 
-  fun_name <- as.character(substitute(fun))
-  if(fun_name[1] == "::") fun_name <- fun_name[3]
-
-  if(!is.null(msg_log_dir) & !report)
-    if(!dir.exists(msg_log_dir)) stop("Message log directory does not exist.")
-
-  # these three variables are globals needed for makeMessage() and
-  # reporting
-  batch_result <- "Success"
-  batch_messages <- character(0)
-
-  # list(
-  #   resultType = result_type,
-  #   warningAndErrorMessages = messages,
-  #   time = paste(as.POSIXct(Sys.time(), tz="UTC"), "UTC"),
-  #   responseType = response_type,
-  #   data = file_path
-  # )
 
   withCallingHandlers(
     {
-      # tryCatch catches error and terminates gracefully
       tryCatch(
         {
+          # these three variables are globals needed for makeMessage() and
+          # reporting
+          original_args <- args
+          batch_result <- "Success"
+          batch_messages <- character(0)
+
+          fun_name <- as.character(substitute(fun))
+          if(fun_name[1] == "::") fun_name <- fun_name[3]
+
+          if(!is.null(msg_log_dir) & !report)
+            if(!dir.exists(msg_log_dir)) stop("Message log directory does not exist.")
+
+          # list(
+          #   resultType = result_type,
+          #   warningAndErrorMessages = messages,
+          #   time = paste(as.POSIXct(Sys.time(), tz="UTC"), "UTC"),
+          #   responseType = response_type,
+          #   data = file_path
+          # )
+
+          # tryCatch catches error and terminates gracefully
           key_arg <- get_arg_value(args, key_arg)
           report_values <- fun(args, ...)
           report_values <-
@@ -85,7 +87,8 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
               list(
                 resultType = batch_result,
                 warningAndErrorMessages = batch_messages,
-                time = paste(as.POSIXct(Sys.time(), tz="UTC"), "UTC")),
+                time = paste(as.POSIXct(Sys.time(), tz="UTC"), "UTC"),
+                commandLineArgs = original_args),
               report_values)
           if(report) report_result(report_values, webhook_var)
           report_values
@@ -98,7 +101,8 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
               list(
                 resultType = batch_result,
                 warningAndErrorMessages = batch_messages,
-                time = paste(as.POSIXct(Sys.time(), tz="UTC"), "UTC")),
+                time = paste(as.POSIXct(Sys.time(), tz="UTC"), "UTC"),
+                commandLineArgs = original_args),
               error_report)
           if(report) {
             report_result(report_values, webhook_var)
