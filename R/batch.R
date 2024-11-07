@@ -54,9 +54,11 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
                   report = FALSE, error_report = list(),
                   webhook_var = "BATCH_WEBHOOK", msg_log_dir = "batch_message_log") {
 
+  if(any(grepl("^--verbose(=|$)", args))) message("Begin batch processing")
 
   withCallingHandlers(
     {
+      # tryCatch catches error and terminates gracefully
       tryCatch(
         {
           # these three variables are globals needed for makeMessage() and
@@ -79,9 +81,10 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
           #   data = file_path
           # )
 
-          # tryCatch catches error and terminates gracefully
-          key_arg <- get_arg_value(args, key_arg)
+          key_arg <- get_arg_value(original_args, key_arg)
+          if(any(grepl("^--verbose(=|$)", original_args))) message(paste0("Calling ", fun_name, "()..."))
           report_values <- fun(args, ...)
+          if(any(grepl("^--verbose(=|$)", original_args))) message(paste0("Reporting results from ", fun_name, "()..."))
           report_values <-
             c(
               list(
@@ -94,6 +97,11 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
           report_values
         },
         error = function(err_obj) {
+          if(any(grepl("^--verbose(=|$)", original_args))) {
+            message("ERROR ENCOUNTERED...")
+            message(err_obj)
+          }
+
           batch_messages[length(batch_messages)+1] <<- makeMessage(err_obj, "Error", key_arg)
           batch_result <<- "Error"
           report_values <-
@@ -105,8 +113,10 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
                 commandLineArgs = original_args),
               error_report)
           if(report) {
+            if(any(grepl("^--verbose(=|$)", original_args))) message("Reporting error results to webhook...")
             report_result(report_values, webhook_var)
           } else if (!is.null(msg_log_dir)) {
+            if(any(grepl("^--verbose(=|$)", original_args))) message("Logging error message...")
             log_message(tail(batch_messages, 1), msg_log_dir, paste0("Error in batch(", fun_name, ")"))
           } else {
             print(report_values)
@@ -117,11 +127,17 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
       )
     },
     warning = function(warning_obj) {
+      if(any(grepl("^--verbose(=|$)", original_args))) {
+        message("WARNING ISSUED...")
+        message(warning_obj)
+      }
+
       batch_result <<- "Warning"
       warn_message <- makeMessage(warning_obj, "Warning", key_arg)
       batch_messages[length(batch_messages)+1] <<- warn_message
       if(!report) {
         if (!is.null(msg_log_dir)) {
+          if(any(grepl("^--verbose(=|$)", original_args))) message("Logging warning...")
           log_message(warn_message, msg_log_dir, paste0("Warning in batch(", fun_name, ")"))
         } else {
           message(warn_message)
