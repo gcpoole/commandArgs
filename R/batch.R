@@ -41,7 +41,8 @@
 #'   report messages to console.
 #' @param error_report A named list of values that is appended to the webhook
 #'   report.  Used for reporting errors in lieu of the values that would have
-#'   been returned from `fun` if there had not been an error.
+#'   been returned from `fun` if there had not been an error.  Set to NULL or
+#'   list() if no argument is to be included in the error messages.
 #' @param webhook_var Name of environment variable containing the URL for the
 #'   reporting webhook.
 #' @param msg_log_dir local directory where messages will be logged.  Directory
@@ -67,6 +68,13 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
           batch_result <- "Success"
           batch_messages <- character(0)
 
+          if(is.null(key_arg)) {
+            key_arg <- ""
+          } else {
+            key_arg <- get_arg_value(original_args, key_arg)
+          }
+          script_file <- get_arg_value(original_args, "file")
+
           fun_name <- as.character(substitute(fun))
           if(fun_name[1] == "::") fun_name <- fun_name[3]
 
@@ -81,7 +89,6 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
           #   data = file_path
           # )
 
-          key_arg <- get_arg_value(original_args, key_arg)
           if(any(grepl("^--verbose(=|$)", original_args))) message(paste0("Calling ", fun_name, "()..."))
           report_values <- fun(args, ...)
           if(any(grepl("^--verbose(=|$)", original_args))) message(paste0("Reporting results from ", fun_name, "()..."))
@@ -89,12 +96,19 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
             c(
               list(
                 resultType = batch_result,
+                source = script_file,
                 warningAndErrorMessages = batch_messages,
                 time = paste(as.POSIXct(Sys.time(), tz="UTC"), "UTC"),
                 commandLineArgs = original_args),
               report_values)
-          if(report) report_result(report_values, webhook_var)
-          report_values
+          # if we are reporting to a webhook, don't send the results to the console.
+          if(report) {
+            report_result(report_values, webhook_var)
+            invisible(report_values)
+          } else {
+            # otherwise send the results to the console
+            return(report_values)
+          }
         },
         error = function(err_obj) {
           if(any(grepl("^--verbose(=|$)", original_args))) {
@@ -108,6 +122,7 @@ batch <- function(args = commandArgs(), fun, key_arg, ...,
             c(
               list(
                 resultType = batch_result,
+                source = script_file,
                 warningAndErrorMessages = batch_messages,
                 time = paste(as.POSIXct(Sys.time(), tz="UTC"), "UTC"),
                 commandLineArgs = original_args),
@@ -171,11 +186,11 @@ log_message <- function(message, log_dir, type) {
 }
 
 # helper function that add a message from warning or error object `x`
-makeMessage <- function(x, type, version_id) {
+makeMessage <- function(x, type, key_arg) {
   paste0(
     type, " in '", paste(deparse(x$call), collapse = ""),
-    "' | ",
-    ifelse(is.na(version_id), "", paste0(" Version ID ", version_id, ": ")),
+    "'",
+    ifelse(key_arg == "", ": ", paste0(" ", key_arg, ": ")),
     x$message)
 }
 
